@@ -15,7 +15,7 @@ const SearchCard = (props) => {
             <div className='w-[40%]'>
                <Image
                   alt={profileData?.name}
-                  src={profileData?.images[0]}
+                  src={profileData?.images ? profileData?.images[0] : assets.user}
                   width={150}
                   height={150}
                   className="h-56 w-full rounded-md object-cover"

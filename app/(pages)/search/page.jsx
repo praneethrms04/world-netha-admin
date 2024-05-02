@@ -40,9 +40,6 @@ const Search = () => {
         return (profile.partnerAgeFrom === parseInt(ageFrom) && profile.gender.toLowerCase() === gender && profile.partnerAgeTo === parseInt(ageTo)) || (profile.partnerAgeFrom === parseInt(ageFrom) && profile.gender.toLowerCase() === gender) || (profile.partnerAgeFrom === parseInt(ageTo) && profile.gender.toLowerCase() === gender) || (profile.partnerAgeFrom === parseInt(ageFrom) && profile.partnerAgeTo === parseInt(ageTo)) || profile.gender.toLowerCase() === gender
 
       })
-
-      console.log(maleProfilesData)
-      setProfiles(maleProfilesData);
       setLoading(false)
 
     } catch (error) {
@@ -56,10 +53,9 @@ const Search = () => {
     <div>
       <div className=' max-w-screen-2xl mx-auto px-4 md:px-8 py-4'>
         <div className='w-full flex flex-row gap-x-6'>
-          <div className='w-1/3'>
+          {/* <div className='w-1/3'>
             <h3>Advanced Searched / Features </h3>
             <div className='flex flex-col gap-y-3'>
-{/* 
               <div className='border border-slate-400 rounded-md'>
                 <div className='px-3 py-3'>
                   <div className='w-full flex flex-row '>
@@ -103,8 +99,7 @@ const Search = () => {
                   </div>
                 </div>
 
-
-              </div> */}
+              </div>
               <div className='border border-slate-400 rounded-md'>
                 <div className='px-3 py-3'>
                   <div className='flex justify-between'>
@@ -171,8 +166,8 @@ const Search = () => {
                 </div>
               </div>
             </div>
-          </div>
-          <div className='w-2/3'>
+          </div> */}
+          <div className='w-full'>
             <h3>Your search results</h3>
             <div className='grid grid-cols-1 gap-5  my-3'>
               {

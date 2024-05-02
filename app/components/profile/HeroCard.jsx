@@ -49,7 +49,7 @@ const HeroCard = (props) => {
             <div className='w-[40%] relative'>
                <Image
                   alt={profileData?.name}
-                  src={profileData?.images[0]}
+                  src={profileData?.images ? profileData?.images[0] : assets.user}
                   width={150}
                   height={150}
                   className="h-52 w-[25rem] rounded-md object-contain"
@@ -59,11 +59,10 @@ const HeroCard = (props) => {
             <div className='w-[60%]'>
                <div className='mb-2 flex items-center justify-between'>
                   <p className="font-semibold text-lg capitalize">{profileData?.firstName} {profileData?.surname} </p>
-                  <Button size="small" className="text-sm font-normal px-4 py-2 border-[#726300]" onClick={gotoEdit} >
-                     {/* <Link href={"/edit/photos"} className='flex flex-row gap-x-2 justify-center items-center'>
-                     </Link> */}
+                  {/* <Button size="small" className="text-sm font-normal px-4 py-2 border-[#726300]" onClick={gotoEdit} >
+            
                      <Image src={assets.save} width={15} height={15} alt='save' /> <span>Edit</span>
-                  </Button>
+                  </Button> */}
                </div>
                <div className="mt-2">
                   <div className='flex flex-col gap-y-2'>
@@ -73,46 +72,44 @@ const HeroCard = (props) => {
                      <div className='w-full flex flex-row items-center gap-x-3'>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Age</p>
-                           <p className='font-bold'>{dateToAge(profileData.dateOfBirth)} Years</p>
+                           {/* <p className='font-bold'>{dateToAge(profileData.dateOfBirth)} Years</p> */}
                         </div>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Qualification</p>
-                           <p className='font-bold'>{profileData.qualificationCategory} </p>
+                           <p className='font-bold capitalize'>{profileData.qualificationCategory} </p>
                         </div>
 
                      </div>
                      <div className='w-full flex flex-row items-center gap-x-3'>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Height</p>
-                           <p className='font-bold'>{profileData.height}</p>
+                           <p className='font-bold capitalize'>{profileData.height}</p>
                         </div>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Religion / Community</p>
-                           <p className='font-bold'>{profileData.religion} </p>
+                           <p className='font-bold capitalize'>{profileData.religion} </p>
                         </div>
                      </div>
                      <div className='w-full flex flex-row items-center gap-x-3'>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Mother Tongue</p>
-                           <p className='font-bold'>{profileData.motherTongue}</p>
+                           <p className='font-bold capitalize'>{profileData.motherTongue}</p>
                         </div>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Martial Status </p>
-                           <p className='font-bold'>{profileData.maritalStatus} </p>
+                           <p className='font-bold capitalize'>{profileData.maritalStatus} </p>
                         </div>
                      </div>
                      <div className='w-full flex flex-row items-center gap-x-3'>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>State</p>
-                           <p className='font-bold'>{profileData.state}</p>
+                           <p className='font-bold capitalize'>{profileData.state?.name}</p>
                         </div>
                         <div className='w-1/2 flex items-center gap-x-4'>
                            <p>Salary </p>
-                           <p className='font-bold'>{profileData.annualIncome} </p>
+                           <p className='font-bold capitalize'>{profileData.annualIncome} </p>
                         </div>
                      </div>
-
-
                   </div>
                </div>
             </div>

@@ -3,9 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import * as assets from "@/public/assets/index"
 
 const ProfileCard = (props) => {
    const { profileData } = props
+   console.log(profileData)
 
 
    return (
@@ -14,7 +16,7 @@ const ProfileCard = (props) => {
             <div>
                <Image
                   alt={profileData?.firstName}
-                  src={profileData?.images[0]}
+                  src={profileData?.images ? profileData?.images[0] : assets.user}
                   width={150}
                   height={150}
                   className="h-56 w-full rounded-md object-cover"
@@ -40,7 +42,7 @@ const ProfileCard = (props) => {
                      <div className="sm:inline-flex sm:shrink-0 sm:items-center sm:gap-2">
                         <div className="mt-1.5 sm:mt-0">
                            <h4>{profileData?.caste}</h4>
-                           <h4>{profileData?.state} </h4>
+                           <h4>{profileData?.state?.name} </h4>
                         </div>
                      </div>
                      <div className="sm:inline-flex sm:shrink-0 sm:items-center sm:gap-2">

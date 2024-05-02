@@ -5,7 +5,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { getDownloadURL, storage, getStorage, ref as storageRef, uploadBytes, uploadBytesResumable } from 'firebase/storage';
 import * as yup from 'yup'
 import citiesData from "../../utils/options/state_cities.json"
-import { annualIncomeDataOptions, brothersDataOptions, casteDataOptions, citizenshipDataOptions, complexionOptions, genderOptions, heightOptions, kujaDosamOptions, maritalOptions, motherTongueOptions, nakshatrasOptions, occupationDataOptions, padamOptions, physicalStatusOptions, placeOfBirthOptions, qualificationDataOptions, raashiOptions, religionOptions, sistersDataOptions, stateDataOptions, timeOfBirthOptions } from '@/app/utils/options'
+import { ageFromOptions, ageToOptions, annualIncomeDataOptions, brothersDataOptions, casteDataOptions, citizenshipDataOptions, complexionOptions, genderOptions, heightOptions, kujaDosamOptions, maritalOptions, motherTongueOptions, nakshatrasOptions, occupationDataOptions, padamOptions, partnerOccupationDataOptions, partnerQualificationDataOptions, physicalStatusOptions, placeOfBirthOptions, qualificationDataOptions, raashiOptions, religionOptions, sistersDataOptions, stateDataOptions, timeOfBirthOptions } from '@/app/utils/options'
 import { getDatabase, push, ref, set } from 'firebase/database'
 import { useDropzone } from 'react-dropzone'
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -16,19 +16,88 @@ import FormControl from '@/app/components/ui/FormControl';
 import MultiStepForm, { FormStep } from '@/app/components/ui/MultiStepForm';
 import ImagePreView from '@/app/components/profile/ImagePreView';
 import { useRouter } from 'next/navigation';
+import { Country, State, City } from 'country-state-city';
+import Selector from '@/app/components/ui/Selector';
+
 
 
 const AddProfile = () => {
-
    const router = useRouter()
-   const [dateOfBirth, setDateOfBirth] = useState('')
-   const [state, setState] = useState('')
-   const [partnerState, setPartnerState] = useState('')
+   let countryData = Country.getAllCountries();
+   let partnerCountryData = Country.getAllCountries();
+
+   const [stateData, setStateData] = useState();
+   const [cityData, setCityData] = useState();
+
+   const [partnerStateData, setPartnerStateData] = useState();
+   const [partnerCityData, setPartnerCityData] = useState();
+
+   const [country, setCountry] = useState();
+   const [state, setState] = useState();
+   const [city, setCity] = useState();
+
+
+   const [partnerCountry, setPartnerCountry] = useState();
+   const [partnerState, setPartnerState] = useState();
+   const [partnerCity, setPartnerCity] = useState();
+
+
+   useEffect(() => {
+
+      if (!partnerCountry) {
+         setPartnerCountry(partnerCountryData[0])
+      }
+      if (!country) {
+         setCountry(countryData[0])
+      }
+
+   }, [])
+
+   useEffect(() => {
+      setStateData(State.getStatesOfCountry(country?.isoCode));
+   }, [country]);
+
+   useEffect(() => {
+      stateData && setState(stateData[0]);
+   }, [stateData]);
+
+   useEffect(() => {
+      cityData && setCity(cityData[0]);
+   }, [cityData]);
+
+   useEffect(() => {
+      setCityData(City.getCitiesOfState(country?.isoCode, state?.isoCode));
+   }, [state]);
+
+   useEffect(() => {
+      if (partnerCountry && partnerCountry.isoCode) {
+         setPartnerStateData(State.getStatesOfCountry(partnerCountry.isoCode));
+      }
+   }, [partnerCountry]);
+
+   useEffect(() => {
+      partnerStateData && setPartnerState(partnerStateData[0]);
+   }, [partnerStateData]);
+
+   useEffect(() => {
+      partnerCityData && setPartnerCity(partnerCityData[0]);
+   }, [partnerCityData]);
+
+   useEffect(() => {
+      if (partnerCountry && partnerState) {
+         setPartnerCityData(City.getCitiesOfState(partnerCountry.isoCode, partnerState.isoCode));
+      }
+   }, [partnerState, partnerCountry]);
+
+
    const [citiesOptions, setCitiesOption] = useState([])
    const [partnerCitiesOptions, setPartnerCitiesOption] = useState([])
    const [files, setFiles] = useState([])
    const [imageUrls, setImageUrls] = useState([])
+
+
    const [successModal, setSuccessModal] = useState(true)
+
    const { acceptedFiles, getRootProps, getInputProps, } = useDropzone({
       disabled: false,
       noDrag: false,
@@ -42,6 +111,8 @@ const AddProfile = () => {
 
    })
 
+
+
    const thumbs = files.map((file) => {
       return (
          <div className='flex fle-row gap-2 '>
@@ -50,6 +121,7 @@ const AddProfile = () => {
       )
    })
 
+
    const initialValues = {
       firstName: "",
       surname: "",
@@ -57,6 +129,7 @@ const AddProfile = () => {
       password: "",
       gender: "",
       maritalStatus: "",
+      dateOfBirth: "",
       timeOfBirth: "",
       placeOfBirth: "",
       height: "",
@@ -66,6 +139,7 @@ const AddProfile = () => {
       kujaDosam: "",
       complexion: "",
       padam: "",
+      adminPriority: false,
       // step 3
       motherTongue: '',
       religion: "",
@@ -94,13 +168,11 @@ const AddProfile = () => {
       alternatephone: "",
       familyDescriotion: "",
       //step 7
-      partnerQualificationCategory: "",
+      partnerQualificationCategory: [],
       partnerQualificationDetails: "",
-      partnerOccupationCategory: "",
+      partnerOccupationCategory: [],
       partnerOccupationDetails: "",
-      partnerCitizenship: "",
-      partnerState: "",
-      partnerCity: "",
+
       //step 8
       partnerAgeFrom: "",
       partnerAgeTo: "",
@@ -119,16 +191,56 @@ const AddProfile = () => {
       parterDescription: "",
 
    }
+   const stepOnevalidationSchema = yup.object({
+      firstName: yup.string().required('First Name is required')
+         .matches(/^[a-zA-Z\s]+$/, "Firstname should contain alphabets only")
+         .max(15, "Must be 15 characters or below ")
+         .min(3, "Must be 3 characters or above "),
+      surname: yup.string().required('Surname is required')
+         .matches(/^[a-zA-Z\s]+$/, "Surname should contain alphabets only")
+         .max(15, "Must be 15 characters or below ")
+         .min(3, "Must be 3 characters or above "),
+      email: yup.string().required('Email address is required').email("Invalid email format"),
+      password: yup.string().required('Password is required').min(6, "Password must be at least 6 characters"),
+      gender: yup.string().required('Gender is required'),
+      maritalStatus: yup.string().required('Marital status is required'),
+   })
+
+   const stepTwovalidationSchema = yup.object({
+      dateOfBirth: yup.string().required('Date of Birth is required'),
+      height: yup.string().required('Height is required'),
+      kujaDosam: yup.string().required('kuja Dosam is required'),
+      complexion: yup.string().required('Complexion status is required'),
+   })
+   const stepFiveValidationSchema = yup.object({
+      fatherName: yup.string().required('Father Name is required'),
+      fatherOccupatiion: yup.string().required('Occupation is required'),
+      motherName: yup.string().required('Mother Name is required'),
+      motherOccupatiion: yup.string().required('Occupation is required'),
+      noOfBrothers: yup.string().required('Number of Brothers is required'),
+      noOfSisters: yup.string().required('Number of Sisters is required'),
+
+   })
 
 
    const handleFormSubmit = async (values) => {
       try {
 
+         const date = values.dateOfBirth;
+         const day = date.getDate().toString().padStart(2, '0');
+         const month = (date.getMonth() + 1).toString().padStart(2, '0');
+         const year = date.getFullYear().toString();
+         const formattedDate = `${day}/${month}/${year}`;
+
          const data = {
             ...values,
+            country: country,
             state: state,
+            city: city,
+            partnerCountry: partnerCountry,
             partnerState: partnerState,
-            dateOfBirth: dateOfBirth,
+            partnerCity: partnerCity,
+            dateOfBirth: formattedDate,
             images: imageUrls
          };
 
@@ -141,9 +253,9 @@ const AddProfile = () => {
          const { email, password } = data;
          const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
          const user = userCredentials.user;
+         toast.success("New Profile was registered Successfully")
          router.push("/all-profiles")
-         toast.success("Profile Created Success")
-
+     
       } catch (error) {
          console.error('Error registering user:', error);
       }
@@ -215,6 +327,7 @@ const AddProfile = () => {
    };
 
 
+
    return (
       <div className='mx-auto max-w-screen-2xl px-4 md:px-8 '>
          <h2 className="mb-4 text-center text-2xl font-bold text-gray-800 md:mb-8 lg:text-3xl">Register</h2>
@@ -231,6 +344,7 @@ const AddProfile = () => {
             >
                <div className='flex flex-col gap-y-3' >
                   <h3 className='pb-4'>Personal Information</h3>
+
                   <div className='w-full flex flex-row gap-x-2 '>
                      <div className='w-1/2' >
                         <FormControl
@@ -241,10 +355,9 @@ const AddProfile = () => {
                            star="true"
                            inputStyles='w-full text-black '
                            labelStyles='text-black'
-
                         />
                      </div>
-                     <div className='w-1/2' >
+                     <div className='w-1/2'>
                         <FormControl
                            control="input"
                            label="Surname"
@@ -256,8 +369,8 @@ const AddProfile = () => {
                         />
                      </div>
                   </div>
-                  <div className='w-full flex flex-row gap-x-2 '>
-                     <div className='w-1/2' >
+                  <div>
+                     <div >
                         <FormControl
                            control="input"
                            label="Email"
@@ -268,7 +381,9 @@ const AddProfile = () => {
                            labelStyles='text-black'
                         />
                      </div>
-                     <div className='w-1/2'  >
+                  </div>
+                  <div>
+                     <div >
                         <FormControl
                            control="input"
                            label="Password"
@@ -280,47 +395,42 @@ const AddProfile = () => {
                         />
                      </div>
                   </div>
-                  <div className='w-full flex flex-row gap-x-2 '>
-                     <div className='w-1/2 flex items-center  gap-x-4'>
+                  <div >
+                     <div className='flex items-center  gap-x-4'>
                         <FormControl control="radio" label="Gender" name="gender" star={true} options={genderOptions} />
                      </div>
-                     <div className='w-1/2 flex items-center  gap-x-4'>
+                  </div>
+                  <div >
+                     <div className='flex items-center  gap-x-4'>
                         <FormControl control="radio" label="Marital Status" name="maritalStatus" star={true} options={maritalOptions} />
                      </div>
                   </div>
                   <div className='w-full flex flex-row gap-4 items-center'>
                      <div className='w-1/3'>
-                        <label className="flex flex-col">
-                           <div className='font-semibold'>
-                              Date of Birth <span className='text-red-600 font-semibold'>*</span>
-                           </div>
-                           <input
-                              className="input-field border border-slate-400 py-[7px] px-2 rounded-md"
-                              type="date"
-                              placeholder="Select date of birth"
-                              value={dateOfBirth}
-                              onChange={(e) => setDateOfBirth(e.target.value)}
-                           />
-                        </label>
+                        <FormControl
+                           control="date"
+                           label="Date of Birth"
+                           star={true}
+                           name="dateOfBirth"
+                           inputStyles="w-full text-black"
+                        />
                      </div>
                      <div className='w-1/3'>
                         <FormControl
                            control="select"
                            label="Time of Birth "
                            name="timeOfBirth"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={timeOfBirthOptions}
                         />
                      </div>
                      <div className='w-1/3' >
                         <FormControl
-                           control="select"
+                           control="input"
+                           type="text"
                            label="Place of Birth"
                            name="placeOfBirth"
-                           star="true"
                            inputStyles={`w-full text-black`}
-                           options={placeOfBirthOptions}
                         />
                      </div>
                   </div>
@@ -341,7 +451,6 @@ const AddProfile = () => {
                            control="select"
                            label="Nakshatram"
                            name="nakshatram"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={nakshatrasOptions}
                         />
@@ -351,7 +460,6 @@ const AddProfile = () => {
                            control="select"
                            label="Raashi "
                            name="raashi"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={raashiOptions}
                         />
@@ -404,7 +512,6 @@ const AddProfile = () => {
                            control="select"
                            label="Mother Tongue"
                            name="motherTongue"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={motherTongueOptions}
                         />
@@ -414,7 +521,6 @@ const AddProfile = () => {
                            control="select"
                            label="Religion "
                            name="religion"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={religionOptions}
                         />
@@ -425,19 +531,17 @@ const AddProfile = () => {
                            control="select"
                            label="Caste "
                            name="caste"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={casteDataOptions}
                         />
 
                      </div>
                   </div>
-                  <div className='w-full flex items-center  gap-x-4'>
+                  <div className='flex items-center  gap-x-4'>
                      <FormControl
                         control="radio"
                         label="Physical Status"
                         name="physicalStatus"
-                        star="true"
                         options={physicalStatusOptions}
                      />
                   </div>
@@ -447,7 +551,6 @@ const AddProfile = () => {
                            control="select"
                            label="Qualification category "
                            name="qualificationCategory"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={qualificationDataOptions}
                         />
@@ -457,7 +560,6 @@ const AddProfile = () => {
                            control="textarea"
                            label="Qualification Details"
                            name="qualificationDetails"
-                           star="true"
                            inputStyles={`w-full text-black`}
                         />
                      </div>
@@ -468,7 +570,6 @@ const AddProfile = () => {
                            control="select"
                            label="Occupation category "
                            name="occupationCategory"
-                           star="true"
                            inputStyles={`w-full text-black`}
                            options={occupationDataOptions}
                         />
@@ -478,17 +579,15 @@ const AddProfile = () => {
                            control="textarea"
                            label="Occupation Details"
                            name="occupationDetails"
-                           star="true"
                            inputStyles={`w-full text-black`}
                         />
                      </div>
                   </div>
-                  <div className='w-full'>
+                  <div>
                      <FormControl
                         control="select"
                         label="Annual Income "
                         name="annualIncome"
-                        star="true"
                         inputStyles={`w-[49%] text-black`}
                         options={annualIncomeDataOptions}
                      />
@@ -534,7 +633,6 @@ const AddProfile = () => {
                            inputStyles={`w-full text-black`}
                         />
                      </div>
-
                   </div>
                   <div className='w-full flex flex-row gap-x-3'>
                      <div className='w-1/2'>
@@ -555,7 +653,6 @@ const AddProfile = () => {
                            inputStyles={`w-full text-black`}
                         />
                      </div>
-
                   </div>
                   <div className='w-full flex flex-row gap-x-3'>
                      <div className='w-1/2'>
@@ -578,40 +675,31 @@ const AddProfile = () => {
                            options={sistersDataOptions}
                         />
                      </div>
-
                   </div>
                   <div className='w-full flex gap-x-3 '>
-                     <div className='w-1/3' >
-                        <FormControl
-                           control="select"
-                           label="Citizen of"
-                           name="citizenship"
-                           star="true"
-                           inputStyles={`w-full text-black`}
-                           options={citizenshipDataOptions}
-                        />
+                     <div className='w-1/3 ' >
+                        <label className='font-semibold' htmlFor="">Citizen of <span className='text-red-600'>*</span></label>
+                        <Selector data={countryData} selected={country} setSelected={setCountry} />
                      </div>
                      <div className='w-1/3' >
-                        <FormControl
-                           control="select"
-                           label="State "
-                           name="state"
-                           star="true"
-                           value={state}
-                           inputStyles={`w-full text-black`}
-                           onChange={selectstate}
-                           options={stateDataOptions}
-                        />
+                        {
+                           state && (
+                              <>
+                                 <label className='font-semibold' htmlFor="">Native State <span className='text-red-600'>*</span></label>
+                                 <Selector data={stateData} selected={state} setSelected={setState} />
+                              </>
+                           )
+                        }
                      </div>
                      <div className='w-1/3' >
-                        <FormControl
-                           control="select"
-                           label="City "
-                           name="city"
-                           star="true"
-                           inputStyles={`w-full text-black`}
-                           options={citiesOptions || []}
-                        />
+                        {
+                           city && (
+                              <>
+                                 <label className='font-semibold' htmlFor="">Native City <span className='text-red-600'>*</span></label>
+                                 <Selector data={cityData} selected={city} setSelected={setCity} />
+                              </>
+                           )
+                        }
                      </div>
                   </div>
                   <div className='w-full'>
@@ -652,7 +740,6 @@ const AddProfile = () => {
                         control="textarea"
                         label="About Family"
                         name="familyDescriotion"
-                        star="true"
                         as="textarea"
                         rows={2}
                         cols={40}
@@ -667,135 +754,135 @@ const AddProfile = () => {
                onSubmit={console.log('Step one submitted')}
             >
                <div
-                  className=' flex flex-col gap-y-3'
+                  className='flex flex-col gap-y-3'
                //  onSubmit={formikProps.handleSubmit}
                >
                   <h3 className='pb-2'>Partner Preferences</h3>
                   <div className='w-full flex gap-x-3'>
-                     <div className=' w-1/2'>
+                     <div className=' w-full'>
                         <FormControl
-                           control="select"
+                           control="checkbox-group"
                            label="Education category "
                            name="partnerQualificationCategory"
                            star="true"
                            inputStyles={`w-full text-black`}
-                           options={qualificationDataOptions}
+                           options={partnerQualificationDataOptions}
                         />
                      </div>
-                     <div className=' w-1/2'>
+                  </div>
+                  <div className='w-full flex gap-x-3'>
+                     <div className=' w-full'>
                         <FormControl
                            control="input"
                            label="Education Details"
                            name="partnerQualificationDetails"
                            type='text'
-                           star="true"
                            inputStyles='w-full text-black '
                            labelStyles='text-black'
                         />
                      </div>
                   </div>
                   <div className='w-full flex gap-x-3'>
-                     <div className=' w-1/2'>
+                     <div className=' w-full'>
                         <FormControl
-                           control="select"
+                           control="checkbox-group"
                            label="Occupation category "
                            name="partnerOccupationCategory"
                            star="true"
                            inputStyles={`w-full text-black`}
-                           options={occupationDataOptions}
+                           options={partnerOccupationDataOptions}
                         />
                      </div>
-                     <div className=' w-1/2'>
+                  </div>
+                  <div className='w-full flex gap-x-3'>
+                     <div className=' w-full'>
                         <FormControl
                            control="input"
                            label="Occupation Details"
                            name="partnerOccupationDetails"
                            type='text'
-                           star="true"
                            inputStyles='w-full text-black '
                            labelStyles='text-black'
                         />
                      </div>
                   </div>
                   <div className='w-full flex gap-x-3 '>
-                     <div className='w-1/3' >
-                        <FormControl
-                           control="select"
-                           label="Citizen of"
-                           name="partnerCitizenship"
-                           star="true"
-                           inputStyles={`w-full text-black`}
-                           options={citizenshipDataOptions}
-                        />
+                     <div className='w-1/3'>
+                        <label className='font-semibold' htmlFor="">Citizen of <span className='text-red-600'>*</span></label>
+                        <Selector data={partnerCountryData} selected={partnerCountry} setSelected={setPartnerCountry} />
                      </div>
-                     <div className='w-1/3' >
-                        <FormControl
-                           control="select"
-                           label="State "
-                           name="partnerState"
-                           star="true"
-                           value={partnerState}
-                           inputStyles={`w-full text-black`}
-                           onChange={partnerSelectstate}
-                           options={stateDataOptions}
-                        />
-                     </div>
-                     <div className='w-1/3' >
-                        <FormControl
-                           control="select"
-                           label="City "
-                           name="partnerCity"
-                           star="true"
-                           inputStyles={`w-full text-black`}
-                           options={partnerCitiesOptions || []}
-                        />
-                     </div>
-                  </div>
-                  <div className="w-full flex flex-col gap-x-4">
-                     <div className='flex gap-x-2' >
-                        <FormControl
-                           control="input"
-                           label="Age From"
-                           name="partnerAgeFrom"
-                           type='number'
-                           star="true"
-                           inputStyles='w-full text-black '
-                           labelStyles='text-black'
-                        />
-                        <FormControl
-                           control="input"
-                           label="Age To"
-                           name="partnerAgeTo"
-                           type='number'
-                           star="true"
-                           inputStyles='w-full text-black '
-                           labelStyles='text-black'
-                        />
-                     </div>
-                     <div className='flex gap-x-2' >
-                        <FormControl
-                           control="input"
-                           label="Height From"
-                           name="partnerHeightFrom"
-                           type='number'
-                           star="true"
-                           inputStyles='w-full text-black '
-                           labelStyles='text-black'
-                        />
-                        <FormControl
-                           control="input"
-                           label="Height To"
-                           name="partnerHeightTo"
-                           type='number'
-                           star="true"
-                           inputStyles='w-full text-black '
-                           labelStyles='text-black'
-                        />
+                     <div className='w-1/3'>
+                        {
+                           partnerState && (
+
+                              <>
+                                 <label className='font-semibold' htmlFor="">Native State <span className='text-red-600'>*</span></label>
+                                 <Selector data={partnerStateData} selected={partnerState} setSelected={setPartnerState} />
+                              </>
+                           )
+                        }
+
 
                      </div>
+                     <div className='w-1/3'>
+                        {
+                           partnerCity && (
+                              <>
+                                 <label className='font-semibold' htmlFor="">Native City <span className='text-red-600'>*</span></label>
+                                 <Selector data={partnerCityData} selected={partnerCity} setSelected={setPartnerCity} />
+                              </>
+                           )
+                        }
+
+                     </div>
+                  </div>
+                  <div className="flex flex-col gap-x-4">
+                     <div className='w-full flex gap-x-2' >
+                        <div className=" w-3/12">
+                           <FormControl
+                              control="select"
+                              label="Age From"
+                              name="partnerAgeFrom"
+                              star="true"
+                              options={ageFromOptions}
+                              inputStyles={`w-full text-black`}
+                           />
+                        </div>
+                        <div className="w-3/12">
+                           <FormControl
+                              control="select"
+                              label="Age To"
+                              name="partnerAgeTo"
+                              star="true"
+                              options={ageToOptions}
+                              inputStyles={`w-full text-black`}
+                           />
+                        </div>
+                        <div className="w-3/12">
+                           <FormControl
+                              control="select"
+                              label="Height From"
+                              name="partnerHeightFrom"
+                              star="true"
+                              options={heightOptions}
+                              inputStyles={`w-full text-black`}
+                           />
+                        </div>
+                        <div className="w-3/12">
+                           <FormControl
+                              control="select"
+                              label="Height To"
+                              name="partnerHeightTo"
+                              star="true"
+                              options={heightOptions}
+                              inputStyles={`w-full text-black`}
+                           />
+                        </div>
+                     </div>
+
 
                   </div>
-                  <div className='w-full flex gap-x-3 '>
+                  <div className='flex gap-x-3 w-full'>
                      <div className='w-1/3' >
                         <FormControl
                            control="select"
@@ -827,7 +914,7 @@ const AddProfile = () => {
                         />
                      </div>
                   </div>
-                  <div className='w-full flex gap-x-3 '>
+                  <div className='flex gap-x-3 w-full'>
                      <div className='w-1/3' >
                         <FormControl
                            control="select"
@@ -860,7 +947,7 @@ const AddProfile = () => {
 
                      </div>
                   </div>
-                  <div className='w-full flex items-center  gap-x-4'>
+                  <div className='flex items-center  gap-x-4'>
                      <FormControl
                         control="radio"
                         label="Kuja Dosam "
@@ -871,18 +958,7 @@ const AddProfile = () => {
                      />
 
                   </div>
-                  <div className='w-full flex items-center  gap-x-4'>
-                     <FormControl
-                        control="radio"
-                        label="Complexion "
-                        name="partnerComplexion"
-                        star="true"
-                        inputStyles={`w-full text-black`}
-                        options={complexionOptions}
-                     />
-
-                  </div>
-                  <div className='w-full flex items-center  gap-x-4'>
+                  <div className='flex items-center  gap-x-4'>
                      <FormControl
                         control="radio"
                         label="Physical Status "
@@ -891,8 +967,18 @@ const AddProfile = () => {
                         inputStyles={`w-full text-black`}
                         options={physicalStatusOptions}
                      />
-
                   </div>
+                  <div className='flex items-center  gap-x-4'>
+                     <FormControl
+                        control="checkbox-group"
+                        label="Complexion "
+                        name="partnerComplexion"
+                        star="true"
+                        inputStyles={`w-full text-black`}
+                        options={complexionOptions}
+                     />
+                  </div>
+
                </div>
             </FormStep>
             <FormStep

@@ -6,11 +6,16 @@ import FeatureCard from "./components/common/FeatureCard";
 import { Button } from "./components/ui/Button";
 import { succesMaches } from "./constants";
 import SuccessMatchCard from "./components/common/SuccessMatchCard";
+import ReactModal from "react-modal";
+import Priority from "./components/common/Priority";
+import { useRouter } from "next/navigation";
 
 const Home = () => {
   const [maleProfiles, setMaleProfiles] = useState([]);
   const [femaleProfiles, setFemaleProfiles] = useState([]);
   const [loading, setLoading] = useState(true)
+  const [modalMaleProfiles, setModalMaleProfiles] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
 
@@ -45,6 +50,13 @@ const Home = () => {
       console.error("Error fetching female profiles:", error);
     }
   };
+
+  const manageMaleFeatures = () => {
+    router.push("manage-male-profiles")
+  }
+  const manageFemaleFeatures = () => {
+    router.push("manage-female-profiles")
+  }
   return (
     <>
       <section className="my-6 px-2">
@@ -58,7 +70,7 @@ const Home = () => {
               loading ? [1, 2, 3, 4].map((_, ind) => <div className="flex ms-10"><FeatureCardLoader key={ind} /></div>) : (
                 <>
                   {
-                    maleProfiles && maleProfiles.filter((profile) => profile.gender === "Male").slice(0, ).map((profileData, index) => {
+                    maleProfiles && maleProfiles.filter((profile) => profile.gender === "Male").slice(0,).map((profileData, index) => {
                       return <div className='flex ms-4 '> <FeatureCard key={index} profileData={profileData} /> </div>
                     })
                   }
@@ -67,7 +79,7 @@ const Home = () => {
             }
           </div>
           <div className="my-4 flex justify-center items-center">
-            <Button variant="gray"> Manage Profoiles </Button>
+            <Button variant="gray" onClick={manageMaleFeatures} > Manage Profoiles </Button>
           </div>
         </div>
       </section>
@@ -91,7 +103,7 @@ const Home = () => {
             }
           </div>
           <div className="my-4 flex justify-center items-center">
-            <Button variant="gray"> Manage Profoiles </Button>
+            <Button variant="gray" onClick={manageFemaleFeatures} > Manage Profoiles </Button>
           </div>
         </div>
       </section>
@@ -109,8 +121,21 @@ const Home = () => {
             }
           </div>
           <div className="my-4 flex justify-center items-center">
-            <Button variant="gray"> Manage Profoiles </Button>
+            {/* <Button variant="gray"> Manage Profoiles </Button> */}
           </div>
+        </div>
+        <div>
+          {
+            modalMaleProfiles && (
+              <ReactModal
+                isOpen={modalMaleProfiles}
+                onRequestClose={() => setModalMaleProfiles(false)}
+                className="bg-white rounded-md shadow-2xl  flex justify-center items-center absolute top-1/4 left-1/3 px-3 py-3 backdrop-blur-md "
+              >
+                <Priority maleProfiles={maleProfiles} />
+              </ReactModal>
+            )
+          }
         </div>
       </section>
     </>

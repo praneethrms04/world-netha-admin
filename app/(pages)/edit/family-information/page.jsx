@@ -131,7 +131,6 @@ const FamilyInformation = () => {
       const data = {
          ...values,
          images: userData.images
-
       }
       const db = getDatabase(app)
       const updatedRef = ref(db, `users/${profileId}`)
@@ -140,8 +139,6 @@ const FamilyInformation = () => {
       }).catch((error) => {
          toast.error('error', error)
       })
-
-
    }
 
    return (

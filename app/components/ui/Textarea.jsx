@@ -14,7 +14,7 @@ const Textarea = (props) => {
    } = props;
    return (
       <div>
-         <label htmlFor={label} className={`${labelStyles}`}>
+         <label htmlFor={label} className={`${labelStyles} font-bold`}>
             {label} {star && <span className='text-red-600'>*</span>}
          </label>
          <Field

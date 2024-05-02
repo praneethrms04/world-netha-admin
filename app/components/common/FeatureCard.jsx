@@ -40,7 +40,7 @@ const FeatureCard = (props) => {
                      <div className="sm:inline-flex sm:shrink-0 sm:items-center sm:gap-2">
                         <div className="mt-1.5 sm:mt-0">
                            <h4>{profileData?.caste}</h4>
-                           <h4>{profileData?.state} </h4>
+                           <h4>{profileData?.state?.name} </h4>
                         </div>
                      </div>
                      <div className="sm:inline-flex sm:shrink-0 sm:items-center sm:gap-2">

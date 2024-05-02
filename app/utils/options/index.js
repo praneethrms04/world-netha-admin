@@ -15,34 +15,47 @@ export const maritalOptions = [
    { key: 'unMarried', value: 'Unmarried' },
    { key: 'secondMarriage', value: 'Secondmarriage' }
 ];
-
+export const quickMaritalOptions = [
+   { value: 'select', key: 'no' },
+   { key: 'unMarried', value: 'Unmarried' },
+   { key: 'secondMarriage', value: 'Secondmarriage' }
+];
 export const searchMaritalOptions = [
    { value: 'select', key: 'no' },
    { value: 'UnMarried', key: 'unmarried' },
    { value: 'SecondMarriage', key: 'secondmarriage' }
 ];
 
-const heightData = [
-   150, 152, 155, 157, 160, 162, 165, 167, 170, 172,
-   175, 177, 180, 182, 185, 187, 190, 192, 195, 197,
-   200, 202, 205, 207, 210, 212, 215, 217, 220, 222
-]
+const createHeightOptions = () => {
+   const heightOptions = [];
+   for (let feet = 4; feet <= 7; feet++) {
+      for (let inches = 0; inches <= 11; inches++) {
+         const height = `${feet}' ${inches}"`;
+         heightOptions.push({ key: height, value: height });
+      }
+   }
+   return heightOptions;
+};
 
-const resHeightOptions = heightData.map((height, index) => ({
-   key: height,
-   value: `${height} cm`,
-}));
+const heightOptions = createHeightOptions();
+heightOptions.unshift({ key: 'no', value: "select" });
+export { heightOptions };
 
-resHeightOptions.unshift({ key: 'no', value: "select" })
-export const heightOptions = resHeightOptions
 
 export const timeOfBirthOptions = [
    { value: 'select', key: 'no' },
-   { value: '9 AM', key: '9am' },
-   { value: '10 AM', key: '10am' },
-   { value: '11 AM', key: '11am' },
-   { value: '12 PM', key: '12pm' },
-]
+   ...Array.from({ length: 24 }, (_, hour) => {
+      const hourStr = hour < 10 ? '0' + hour : hour;
+      return Array.from({ length: 60 }, (_, minute) => {
+         const minuteStr = minute < 10 ? '0' + minute : minute;
+         return {
+            value: `${hourStr}:${minuteStr}`,
+            key: `${hourStr}:${minuteStr}`
+         };
+      });
+   }).flat()
+];
+
 
 export const placeOfBirthOptions = [
    { value: 'select', key: 'no' },
@@ -159,7 +172,7 @@ resMotherTongueOptions.unshift({ key: 'no', value: "select" })
 export const motherTongueOptions = resMotherTongueOptions
 
 
-const religionData = ["Hindu", "Muslim", "Christian"]
+const religionData = ["Hindu",]
 
 const resReligionOptions = religionData.map((religion) => {
    return {
@@ -170,7 +183,7 @@ const resReligionOptions = religionData.map((religion) => {
 resReligionOptions.unshift({ key: 'no', value: "select" })
 export const religionOptions = resReligionOptions
 
-const casteData = ["Padmashali", "Yadav", "Reddy"]
+const casteData = ["Padmashali",]
 
 const resCasteDataOptions = casteData.map((caste) => {
    return {
@@ -187,12 +200,21 @@ export const physicalStatusOptions = [
 ]
 
 const qualificationData = [
-   "SSC (10th Grade)",
-   "Intermediate (12th Grade)",
-   "Undergraduate (Bachelor's Degree)",
-   "Postgraduate (Master's Degree)",
-   "Doctorate (Ph.D.)"
+   "Abroad (MS/H1/GC/Citizen)",
+   "Medical (MD/MBBS/BDS/MDS/BPT/MPT/M.Pharm/B.Pharm)",
+   "Engineering & MCA (BE/B.Tech/M.tech/MCA)",
+   "Post Graduation (MBA/M.Sc/MA)",
+   "Graduation (B.Sc/B.Com/BA)",
+   "Upto Intermediate"
 ]
+
+const resPartnerQualificationDataOptions = qualificationData.map((qualificationData) => {
+   return {
+      value: qualificationData,
+      key: qualificationData.toLowerCase()
+   }
+})
+export const partnerQualificationDataOptions = resPartnerQualificationDataOptions
 
 const resQualificationDataOptions = qualificationData.map((qualificationData) => {
    return {
@@ -202,6 +224,17 @@ const resQualificationDataOptions = qualificationData.map((qualificationData) =>
 })
 resQualificationDataOptions.unshift({ key: "no", value: "select" })
 export const qualificationDataOptions = resQualificationDataOptions
+
+const age = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const resAge = age.map((age) => {
+   return {
+      value: age,
+      key: age.toString()
+   }
+})
+resAge.unshift({ key: "no", value: "select" })
+export const ageFromOptions = resAge
+export const ageToOptions = resAge
 
 const occupationData = [
    "Govt Employee",
@@ -234,6 +267,15 @@ const occupationData = [
    "Quality Analyst",
    "Quality Assurance Specialist",
 ]
+
+const resPartnerOccupationDataOptions = occupationData.map((occupation) => {
+   return {
+      value: occupation,
+      key: occupation.toLocaleLowerCase()
+   }
+})
+
+export const partnerOccupationDataOptions = resPartnerOccupationDataOptions
 
 const resOccupationDataOptions = occupationData.map((occupation) => {
    return {
